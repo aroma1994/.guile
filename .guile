@@ -1,0 +1,524 @@
+(use-modules (ice-9 history) (ice-9 readline))
+(disable-value-history!)
+(activate-readline)
+
+(define atom?
+    (λ
+        (x)
+        (and
+            (not (pair? x))
+            (not (null? x)))))
+
+(define lat?
+    (λ
+        (x)
+        (or
+            (null? x)
+            (and
+                (atom? (car x))
+                (or
+                    (and
+                        (not (null? (cdr x)))
+                        (lat? (cdr x)))
+                    (null? (cdr x)))))))
+
+(define flat?
+    (λ
+        (x)
+        (and
+            (not (null? x))
+            (atom? (car x))
+            (or
+                (and
+                    (not (null? (cdr x)))
+                    (flat? (cdr x)))
+                (null? (cdr x))))))
+
+(define member?
+    (λ
+        (x xx)
+        (and
+            (not (null? xx))
+            (or
+                (eq? x (car xx))
+                (member? x (cdr xx))))))
+
+(define rember
+    (λ
+        (x xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (eq? x (car xx))
+                (cdr xx))
+            (cons
+                (car xx)
+                (rember x (cdr xx))))))
+
+(define firsts
+    (λ
+        (xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (cons
+                (car (car xx))
+                (firsts (cdr xx))))))
+
+(define seconds
+    (λ
+        (xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (cons
+                (car (cdr (car xx)))
+                (seconds (cdr xx))))))
+
+(define insertR
+    (λ
+        (y x xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (eq? x (car xx))
+                (cons
+                    x
+                    (cons
+                        y
+                        (cdr xx))))
+            (cons
+                (car xx)
+                (insertR y x (cdr xx))))))
+
+(define insertL
+    (λ
+        (y x xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (eq? x (car xx))
+                (cons
+                    y
+                    (cons
+                        x
+                        (cdr xx))))
+            (cons
+                (car xx)
+                (insertL y x (cdr xx))))))
+
+(define subst
+    (λ
+        (y x xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (eq? x (car xx))
+                (cons
+                    y
+                    (cdr xx)))
+            (cons
+                (car xx)
+                (subst y x (cdr xx))))))
+
+(define subst2
+    (λ
+        (y x1 x2 xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (or
+                    (eq? x1 (car xx))
+                    (eq? x2 (car xx)))
+            (cons
+                y
+                (cdr xx)))
+            (cons
+                (car xx)
+                (subst2 y x1 x2 (cdr xx))))))
+
+(define multirember
+    (λ
+        (x xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (eq? x (car xx))
+                (multirember x (cdr xx)))
+            (cons
+                (car xx)
+                (multirember x (cdr xx))))))
+
+(define multiinsertR
+    (λ
+        (y x xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (eq? x (car xx))
+                (cons
+                    x
+                    (cons
+                        y
+                        (multiinsertR y x (cdr xx)))))
+            (cons
+                (car xx)
+                (multiinsertR y x (cdr xx))))))
+
+(define multiinsertL
+    (λ
+        (y x xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (eq? x (car xx))
+                (cons
+                    y
+                    (cons
+                        x
+                        (multiinsertL y x (cdr xx)))))
+            (cons
+                (car xx)
+                (multiinsertL y x (cdr xx))))))
+
+(define multisubstr
+    (λ
+        (y x xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (eq? x (car xx))
+                (cons
+                    y
+                    (multisubstr y x (cdr xx))))
+            (cons
+                (car xx)
+                (multisubstr y x (cdr xx))))))
+
+(define multisubstr2
+    (λ
+        (y x1 x2 xx)
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (or
+                    (eq? x1 (car xx))
+                    (eq? x2 (car xx)))
+                (cons
+                    y
+                    (multisubstr2 y x1 x2 (cdr xx))))
+            (cons
+                (car xx)
+                (multisubstr2 y x1 x2 (cdr xx))))))
+
+(define add1
+    (λ
+        (n)
+        (+ n 1)))
+
+(define sub1
+    (λ
+        (n)
+        (- n 1)))
+
+(define o+
+    (λ
+        (x y)
+        (or
+            (and
+                (zero? y)
+                x)
+            (add1 (o+ x (sub1 y))))))
+
+(define o-
+    (λ
+        (x y)
+        (or
+            (and
+                (zero? y)
+                x)
+            (sub1 (o- x (sub1 y))))))
+
+(define addtup
+    (λ
+        (x)
+        (or
+            (and
+                (null? x)
+                0)
+            (o+
+                (car x)
+                (addtup
+                    (cdr x))))))
+
+(define ox
+    (λ
+        (x y)
+        (or
+            (and
+                (zero? y)
+                0)
+            (o+ x (ox x (sub1 y))))))
+
+(define tup+
+    (λ
+        (tup1 tup2)
+        (or
+            (and
+                (null? tup1) tup2)
+            (and
+                (null? tup2) tup1))
+            (cons
+                (o+ (car tup1) (car tup2))
+                (tup+ (cdr tup1) (cdr tup2)))))
+
+(define o>
+    (λ
+        (x y)
+        (and
+            (not
+                (and
+                    (zero? x)
+                    (zero? y)))
+            (or (zero? y)
+                (and
+                    (not
+                        (zero? x))
+                    (o> (- x 1) (- y 1)))))))
+
+(define o<
+    (λ
+        (x y)
+        (and
+            (not
+                (and
+                    (zero? x)
+                    (zero? y)))
+            (or (zero? x)
+                (and
+                    (not
+                        (zero? y))
+                    (o< (- x 1) (- y 1)))))))
+
+(define o=
+    (λ
+        (x y)
+        (or
+            (and
+                (zero? x)
+                (zero? y))
+            (and
+                (not
+                    (zero? x))
+                (o= (- x 1) (- y 1))))))
+
+(define o=cond
+    (λ
+        (x y)
+        (cond
+            ((zero? x) (zero? y))
+            ((zero? x) #f)
+            (else
+                (o=cond (- x 1) (- y 1))))))
+
+(define o=with><
+    (λ
+        (x y)
+        (and
+            (not (o> x y))
+            (not (o< x y)))))
+
+
+(define o^
+    (λ
+        (x y)
+        (or
+            (and
+                (zero? y)
+                1)
+            (ox x (o^ x (- y 1))))))
+
+(define o/
+    (λ
+        (x y)
+        (or
+            (and
+                (o< x y)
+                0)
+            (+ 1 (o/ (o- x y) y)))))
+
+(define len
+    (λ
+        (xx)
+
+        (or
+            (and
+                (null? xx)
+                0)
+            (+ 1 (len (cdr xx))))))
+
+(define pick
+    (λ
+        (x xx)
+
+        (or
+            (and
+                (one? x)
+                (car xx))
+            (pick (- x 1) (cdr xx)))))
+
+(define remafter
+    (λ
+        (x xx)
+
+        (or
+            (and
+                (zero? x)
+                (quote ()))
+            (cons
+                (car xx)
+                (remafter (- x 1) (cdr xx))))))
+
+(define no-nums
+    (λ
+        (xx)
+
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (number? (car xx))
+                (no-nums (cdr xx)))
+            (cons
+                (car xx)
+                (no-nums (cdr xx))))))
+
+(define all-nums
+    (λ
+        (xx)
+
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (number? (car xx))
+                (cons
+                    (car xx)
+                    (all-nums (cdr xx))))
+            (all-nums (cdr xx)))))
+
+(define eqan?
+    (λ
+        (x y)
+
+        (or
+            (and
+                (number? x)
+                (number? y)
+                (o= x y))
+            (eq? x y))))
+
+(define occur
+    (λ
+        (x xx)
+
+        (or
+            (and
+                (null? xx)
+                0)
+            (and
+                (eqan? x (car xx))
+                (+ 1 (occur x (cdr xx))))
+            (occur x (cdr xx)))))
+
+(define one?
+    (λ
+        (x)
+
+            (zero? (- x 1))))
+
+(define rempick
+    (λ
+        (x xx)
+
+        (or
+            (and
+                (one? x)
+                (cdr xx))
+            (cons
+                (car xx)
+                (rempick (- x 1) (cdr xx))))))
+
+(define rember*
+    (λ
+        (x xx)
+
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+#!            (and
+                (lat? xx)
+                (multirember x xx)) !#
+            (and
+                (atom? (car xx))
+                (or
+                    (and
+                        (eq? x (car xx))
+                        (rember* x (cdr xx)))
+                    (cons
+                        (car xx)
+                        (rember* x (cdr xx)))))
+            (cons
+                (rember* x (car xx))
+                (rember* x (cdr xx))))))
+
+(define insertR*
+    (λ
+        (r x xx)
+
+        (or
+            (and
+                (null? xx)
+                (quote ()))
+            (and
+                (atom? (car xx))
+                (or
+                    (and
+                        (eq? x (car xx))
+                        (cons
+                            (car xx)
+                            (cons
+                                r
+                                (insertR* r x (cdr xx)))))
+                    (cons
+                        (car xx)
+                        (insertR* r x (cdr xx)))))
+            (cons
+                (insertR* r x (car xx))
+                (insertR* r x (cdr xx))))))
+

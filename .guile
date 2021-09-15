@@ -1,4 +1,6 @@
-(use-modules (ice-9 history) (ice-9 readline))
+(use-modules
+    (ice-9 history)
+    (ice-9 readline))
 (disable-value-history!)
 (activate-readline)
 
